@@ -41,7 +41,7 @@ function loadArrayQ2(callback) {
 function loadMap() {
     google.charts.load('current', {
         'packages':['geochart'],
-        'mapsApiKey': 'AIzaSyCqnJzg7vdeP17AviEQkWBIzwJVCf1I-Qo'
+        'mapsApiKey': ''
       });
       google.charts.setOnLoadCallback(drawRegionsMap);
     
