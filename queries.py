@@ -32,7 +32,19 @@ def execute_select_query(query):
 
 
 # Execute function
-def get_query_4():
+def get_query_1():
+    query = get_participation_par_annee()
+    result = execute_select_query(query)
+    if result is not None:
+        return result
+
+def get_query_2():
+    query = get_participation_par_annee_et_region()
+    result = execute_select_query(query)
+    if result is not None:
+        return result
+
+def get_query_3():
     query_droite = get_droite_evolution_by_date()
     query_gauche = get_gauche_evolution_by_date()
     result_droite = execute_select_query(query_droite)
@@ -42,6 +54,15 @@ def get_query_4():
         result = [result_gauche, result_droite]
         return result
 
+def get_query_4():
+    query_droite = get_droite_evolution_by_date_and_region()
+    query_gauche = get_droite_evolution_by_date_and_region()
+    result_droite = execute_select_query(query_droite)
+    result_gauche = execute_select_query(query_gauche)
+
+    if result_droite is not None and result_gauche is not None:
+        result = [result_gauche, result_droite]
+        return result
 
 def get_query_5():
     query = get_seuil_passage_tour_2()
@@ -57,12 +78,30 @@ def get_query_6():
 
 
 # Queries
+def get_participation_par_annee():
+    return """
+        SELECT ((SUM(pf.votants) / CAST(SUM(pf.inscrits) as float)) * 100) as taux_paticip, dd.annee FROM participation_fait pf
+        INNER JOIN date_dim dd ON dd.id_date = pf.id_date
+        GROUP BY dd.annee
+        ORDER BY dd.annee
+    """
+
+def get_participation_par_annee_et_region():
+    return """
+        SELECT ((SUM(pf.votants) / CAST(SUM(pf.inscrits) as float)) * 100) as taux_paticip, dd.annee, ld.region 
+        FROM participation_fait pf
+        INNER JOIN date_dim dd ON dd.id_date = pf.id_date
+        INNER JOIN lieu_dim ld ON ld.id_lieu = pf.id_lieu
+        GROUP BY dd.annee, ld.region
+        ORDER BY dd.annee
+    """
+
 def get_droite_evolution_by_date():
     return """
         SELECT AVG(rf.nb_voix)::INT as evolution, dd.annee FROM resultat_fait rf 
 	    INNER JOIN (SELECT id_candidat FROM candidat_dim WHERE gauche = false) droite
 	    ON droite.id_candidat = rf.id_candidat
-	    INNER JOIN date_dim dd ON dd.id_date = rf.id_date
+	    INNER JOIN (SELECT id_date, annee FROM date_dim WHERE tour='1') dd.id_date = rf.id_date
 	    GROUP BY dd.annee
 	    ORDER BY dd.annee
     """
@@ -72,7 +111,7 @@ def get_gauche_evolution_by_date():
         SELECT AVG(rf.nb_voix)::INT as evolution, dd.annee FROM resultat_fait rf 
 	    INNER JOIN (SELECT id_candidat FROM candidat_dim WHERE gauche = true) gauche
 	    ON gauche.id_candidat = rf.id_candidat
-	    INNER JOIN date_dim dd ON dd.id_date = rf.id_date
+	    INNER JOIN (SELECT id_date, annee FROM date_dim WHERE tour='1') dd ON dd.id_date = rf.id_date
 	    GROUP BY dd.annee
 	    ORDER BY dd.annee
     """
@@ -82,7 +121,7 @@ def get_droite_evolution_by_date_and_region() :
         SELECT AVG(rf.nb_voix)::INT as evolution, dd.annee, ll.region FROM resultat_fait rf 
         INNER JOIN (SELECT id_candidat FROM candidat_dim WHERE gauche = false) droite
         ON droite.id_candidat = rf.id_candidat
-        INNER JOIN date_dim dd ON dd.id_date = rf.id_date
+        INNER JOIN (SELECT id_date, annee FROM date_dim WHERE tour='1') dd ON dd.id_date = rf.id_date
         INNER JOIN lieu_dim ll ON ll.id_lieu = rf.id_lieu
         GROUP BY dd.annee, ll.region
         ORDER BY dd.annee
@@ -93,7 +132,7 @@ def get_gauche_evolution_by_date_and_region() :
         SELECT AVG(rf.nb_voix)::INT as evolution, dd.annee, ll.region FROM resultat_fait rf 
         INNER JOIN (SELECT id_candidat FROM candidat_dim WHERE gauche = true) gauche
         ON gauche.id_candidat = rf.id_candidat
-        INNER JOIN date_dim dd ON dd.id_date = rf.id_date
+        INNER JOIN (SELECT id_date, annee FROM date_dim WHERE tour='1') dd ON dd.id_date = rf.id_date
         INNER JOIN lieu_dim ll ON ll.id_lieu = rf.id_lieu
         GROUP BY dd.annee, ll.region
         ORDER BY dd.annee

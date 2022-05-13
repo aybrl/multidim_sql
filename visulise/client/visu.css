@@ -1,0 +1,17 @@
+#page-body {
+    width: 100vw;
+    height: 98vh;
+    display: grid;
+    grid-template-columns: 50% 50%;
+}
+
+#regions_div {
+    border: 1px black solid;
+}
+
+#right-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
